@@ -19,21 +19,21 @@ export function handlePoolCreated(event: PoolCreated): void {
   if (factory === null) {
     factory = new Factory(FACTORY_ADDRESS)
     factory.poolCount = ZERO_BI
-    factory.totalVolumeETH = ZERO_BD
+    factory.totalVolumeRSS3 = ZERO_BD
     factory.totalVolumeUSD = ZERO_BD
     factory.untrackedVolumeUSD = ZERO_BD
     factory.totalFeesUSD = ZERO_BD
-    factory.totalFeesETH = ZERO_BD
-    factory.totalValueLockedETH = ZERO_BD
+    factory.totalFeesRSS3 = ZERO_BD
+    factory.totalValueLockedRSS3 = ZERO_BD
     factory.totalValueLockedUSD = ZERO_BD
     factory.totalValueLockedUSDUntracked = ZERO_BD
-    factory.totalValueLockedETHUntracked = ZERO_BD
+    factory.totalValueLockedRSS3Untracked = ZERO_BD
     factory.txCount = ZERO_BI
     factory.owner = ADDRESS_ZERO
 
-    // create new bundle for tracking eth price
+    // create new bundle for tracking rss3 price
     let bundle = new Bundle('1')
-    bundle.ethPriceUSD = ZERO_BD
+    bundle.rss3PriceUSD = ZERO_BD
     bundle.save()
   }
 
@@ -58,7 +58,7 @@ export function handlePoolCreated(event: PoolCreated): void {
     }
 
     token0.decimals = decimals
-    token0.derivedETH = ZERO_BD
+    token0.derivedRSS3 = ZERO_BD
     token0.volume = ZERO_BD
     token0.volumeUSD = ZERO_BD
     token0.feesUSD = ZERO_BD
@@ -83,7 +83,7 @@ export function handlePoolCreated(event: PoolCreated): void {
       return
     }
     token1.decimals = decimals
-    token1.derivedETH = ZERO_BD
+    token1.derivedRSS3 = ZERO_BD
     token1.volume = ZERO_BD
     token1.volumeUSD = ZERO_BD
     token1.untrackedVolumeUSD = ZERO_BD
@@ -125,7 +125,7 @@ export function handlePoolCreated(event: PoolCreated): void {
   pool.totalValueLockedToken0 = ZERO_BD
   pool.totalValueLockedToken1 = ZERO_BD
   pool.totalValueLockedUSD = ZERO_BD
-  pool.totalValueLockedETH = ZERO_BD
+  pool.totalValueLockedRSS3 = ZERO_BD
   pool.totalValueLockedUSDUntracked = ZERO_BD
   pool.volumeToken0 = ZERO_BD
   pool.volumeToken1 = ZERO_BD

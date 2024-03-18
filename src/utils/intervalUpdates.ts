@@ -29,7 +29,7 @@ export function updateUniswapDayData(event: ethereum.Event): UniswapDayData {
   if (uniswapDayData === null) {
     uniswapDayData = new UniswapDayData(dayID.toString())
     uniswapDayData.date = dayStartTimestamp
-    uniswapDayData.volumeETH = ZERO_BD
+    uniswapDayData.volumeRSS3 = ZERO_BD
     uniswapDayData.volumeUSD = ZERO_BD
     uniswapDayData.volumeUSDUntracked = ZERO_BD
     uniswapDayData.feesUSD = ZERO_BD
@@ -149,7 +149,7 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
     .toString()
     .concat('-')
     .concat(dayID.toString())
-  let tokenPrice = token.derivedETH.times(bundle.ethPriceUSD)
+  let tokenPrice = token.derivedRSS3.times(bundle.rss3PriceUSD)
 
   let tokenDayData = TokenDayData.load(tokenDayID)
   if (tokenDayData === null) {
@@ -175,7 +175,7 @@ export function updateTokenDayData(token: Token, event: ethereum.Event): TokenDa
   }
 
   tokenDayData.close = tokenPrice
-  tokenDayData.priceUSD = token.derivedETH.times(bundle.ethPriceUSD)
+  tokenDayData.priceUSD = token.derivedRSS3.times(bundle.rss3PriceUSD)
   tokenDayData.totalValueLocked = token.totalValueLocked
   tokenDayData.totalValueLockedUSD = token.totalValueLockedUSD
   tokenDayData.save()
@@ -193,7 +193,7 @@ export function updateTokenHourData(token: Token, event: ethereum.Event): TokenH
     .concat('-')
     .concat(hourIndex.toString())
   let tokenHourData = TokenHourData.load(tokenHourID)
-  let tokenPrice = token.derivedETH.times(bundle.ethPriceUSD)
+  let tokenPrice = token.derivedRSS3.times(bundle.rss3PriceUSD)
 
   if (tokenHourData === null) {
     tokenHourData = new TokenHourData(tokenHourID)
