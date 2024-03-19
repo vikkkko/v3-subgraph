@@ -5,17 +5,21 @@ import { BigDecimal, BigInt } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from '../utils/index'
 
 const RSS3_ADDRESS = '0x4200000000000000000000000000000000000042'
-const USDC_RSS3_03_POOL = '0xa092f16578d1665a70bdf7f810809c8730cb10e9'
+const USDT_RSS3_03_POOL = '0x193cabb82546b5f9e291d5b02fe29ec64c653573'
 
 // token where amounts should contribute to tracked volume and liquidity
 // usually tokens that many tokens are paired with s
 export let WHITELIST_TOKENS: string[] = [
   RSS3_ADDRESS, // RSS3
   '0x3a9dad5a0c8a968003d9d7b68b1b6f45d7a4cb4d', // USDT
+  '0xb8062fcc4c85a564651eb45b66fd1ffcff9b86bf', // USDC
+  '0x05bf18310a20fbaeba376282b5fc6cc0a404402b', // A
+  '0x45356c3721e479492d03c4d956aaed17e8ca9bce' // B
 ]
 
 let STABLE_COINS: string[] = [
-  '0x3a9dad5a0c8a968003d9d7b68b1b6f45d7a4cb4d'
+  '0x3a9dad5a0c8a968003d9d7b68b1b6f45d7a4cb4d',
+  '0xb8062fcc4c85a564651eb45b66fd1ffcff9b86bf'
 ]
 
 let MINIMUM_RSS3_LOCKED = BigDecimal.fromString('60')
@@ -35,7 +39,7 @@ export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, t
 
 export function getRSS3PriceInUSD(): BigDecimal {
   // fetch rss3 prices for each stablecoin
-  let usdcPool = Pool.load(USDC_RSS3_03_POOL) // dai is token0
+  let usdcPool = Pool.load(USDT_RSS3_03_POOL) // dai is token0
   if (usdcPool !== null) {
     return usdcPool.token0Price
   } else {
