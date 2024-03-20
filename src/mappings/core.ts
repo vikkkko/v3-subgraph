@@ -11,7 +11,7 @@ import {
 } from '../types/templates/Pool/Pool'
 import { convertTokenToDecimal, loadTransaction, safeDiv } from '../utils'
 import { FACTORY_ADDRESS, ONE_BI, ZERO_BD, ZERO_BI } from '../utils/constants'
-import { findRSS3PerToken, getRSS3PriceInUSD, getTrackedAmountUSD, sqrtPriceX96ToTokenPrices } from '../utils/pricing'
+import { findETHPerToken, getETHPriceInUSD, getTrackedAmountUSD, sqrtPriceX96ToTokenPrices } from '../utils/pricing'
 import {
   updatePoolDayData,
   updatePoolHourData,
@@ -33,17 +33,17 @@ export function handleInitialize(event: Initialize): void {
   let token0 = Token.load(pool.token0)
   let token1 = Token.load(pool.token1)
 
-  // update RSS3 price now that prices could have changed
+  // update ETH price now that prices could have changed
   let bundle = Bundle.load('1')
-  bundle.rss3PriceUSD = getRSS3PriceInUSD()
+  bundle.ethPriceUSD = getETHPriceInUSD()
   bundle.save()
 
   updatePoolDayData(event)
   updatePoolHourData(event)
 
   // update token prices
-  token0.derivedRSS3 = findRSS3PerToken(token0 as Token)
-  token1.derivedRSS3 = findRSS3PerToken(token1 as Token)
+  token0.derivedETH = findETHPerToken(token0 as Token)
+  token1.derivedETH = findETHPerToken(token1 as Token)
   token0.save()
   token1.save()
 }
@@ -60,11 +60,11 @@ export function handleMint(event: MintEvent): void {
   let amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals)
 
   let amountUSD = amount0
-    .times(token0.derivedRSS3.times(bundle.rss3PriceUSD))
-    .plus(amount1.times(token1.derivedRSS3.times(bundle.rss3PriceUSD)))
+    .times(token0.derivedETH.times(bundle.ethPriceUSD))
+    .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)))
 
   // reset tvl aggregates until new amounts calculated
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.minus(pool.totalValueLockedRSS3)
+  factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH)
 
   // update globals
   factory.txCount = factory.txCount.plus(ONE_BI)
@@ -72,12 +72,12 @@ export function handleMint(event: MintEvent): void {
   // update token0 data
   token0.txCount = token0.txCount.plus(ONE_BI)
   token0.totalValueLocked = token0.totalValueLocked.plus(amount0)
-  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedRSS3.times(bundle.rss3PriceUSD))
+  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedETH.times(bundle.ethPriceUSD))
 
   // update token1 data
   token1.txCount = token1.txCount.plus(ONE_BI)
   token1.totalValueLocked = token1.totalValueLocked.plus(amount1)
-  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedRSS3.times(bundle.rss3PriceUSD))
+  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedETH.times(bundle.ethPriceUSD))
 
   // pool data
   pool.txCount = pool.txCount.plus(ONE_BI)
@@ -94,14 +94,14 @@ export function handleMint(event: MintEvent): void {
 
   pool.totalValueLockedToken0 = pool.totalValueLockedToken0.plus(amount0)
   pool.totalValueLockedToken1 = pool.totalValueLockedToken1.plus(amount1)
-  pool.totalValueLockedRSS3 = pool.totalValueLockedToken0
-    .times(token0.derivedRSS3)
-    .plus(pool.totalValueLockedToken1.times(token1.derivedRSS3))
-  pool.totalValueLockedUSD = pool.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  pool.totalValueLockedETH = pool.totalValueLockedToken0
+    .times(token0.derivedETH)
+    .plus(pool.totalValueLockedToken1.times(token1.derivedETH))
+  pool.totalValueLockedUSD = pool.totalValueLockedETH.times(bundle.ethPriceUSD)
 
   // reset aggregates with new amounts
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.plus(pool.totalValueLockedRSS3)
-  factory.totalValueLockedUSD = factory.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  factory.totalValueLockedETH = factory.totalValueLockedETH.plus(pool.totalValueLockedETH)
+  factory.totalValueLockedUSD = factory.totalValueLockedETH.times(bundle.ethPriceUSD)
 
   let transaction = loadTransaction(event)
   let mint = new Mint(transaction.id.toString() + '#' + pool.txCount.toString())
@@ -179,11 +179,11 @@ export function handleBurn(event: BurnEvent): void {
   let amount1 = convertTokenToDecimal(event.params.amount1, token1.decimals)
 
   let amountUSD = amount0
-    .times(token0.derivedRSS3.times(bundle.rss3PriceUSD))
-    .plus(amount1.times(token1.derivedRSS3.times(bundle.rss3PriceUSD)))
+    .times(token0.derivedETH.times(bundle.ethPriceUSD))
+    .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)))
 
   // reset tvl aggregates until new amounts calculated
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.minus(pool.totalValueLockedRSS3)
+  factory.totalValueLockedETH = factory.totalValueLockedETH.minus(pool.totalValueLockedETH)
 
   // update globals
   factory.txCount = factory.txCount.plus(ONE_BI)
@@ -191,12 +191,12 @@ export function handleBurn(event: BurnEvent): void {
   // update token0 data
   token0.txCount = token0.txCount.plus(ONE_BI)
   token0.totalValueLocked = token0.totalValueLocked.minus(amount0)
-  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedRSS3.times(bundle.rss3PriceUSD))
+  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedETH.times(bundle.ethPriceUSD))
 
   // update token1 data
   token1.txCount = token1.txCount.plus(ONE_BI)
   token1.totalValueLocked = token1.totalValueLocked.minus(amount1)
-  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedRSS3.times(bundle.rss3PriceUSD))
+  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedETH.times(bundle.ethPriceUSD))
 
   // pool data
   pool.txCount = pool.txCount.plus(ONE_BI)
@@ -212,14 +212,14 @@ export function handleBurn(event: BurnEvent): void {
 
   pool.totalValueLockedToken0 = pool.totalValueLockedToken0.minus(amount0)
   pool.totalValueLockedToken1 = pool.totalValueLockedToken1.minus(amount1)
-  pool.totalValueLockedRSS3 = pool.totalValueLockedToken0
-    .times(token0.derivedRSS3)
-    .plus(pool.totalValueLockedToken1.times(token1.derivedRSS3))
-  pool.totalValueLockedUSD = pool.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  pool.totalValueLockedETH = pool.totalValueLockedToken0
+    .times(token0.derivedETH)
+    .plus(pool.totalValueLockedToken1.times(token1.derivedETH))
+  pool.totalValueLockedUSD = pool.totalValueLockedETH.times(bundle.ethPriceUSD)
 
   // reset aggregates with new amounts
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.plus(pool.totalValueLockedRSS3)
-  factory.totalValueLockedUSD = factory.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  factory.totalValueLockedETH = factory.totalValueLockedETH.plus(pool.totalValueLockedETH)
+  factory.totalValueLockedUSD = factory.totalValueLockedETH.times(bundle.ethPriceUSD)
 
   // burn entity
   let transaction = loadTransaction(event)
@@ -296,32 +296,32 @@ export function handleSwap(event: SwapEvent): void {
     amount1Abs = amount1.times(BigDecimal.fromString('-1'))
   }
 
-  let amount0RSS3 = amount0Abs.times(token0.derivedRSS3)
-  let amount1RSS3 = amount1Abs.times(token1.derivedRSS3)
-  let amount0USD = amount0RSS3.times(bundle.rss3PriceUSD)
-  let amount1USD = amount1RSS3.times(bundle.rss3PriceUSD)
+  let amount0ETH = amount0Abs.times(token0.derivedETH)
+  let amount1ETH = amount1Abs.times(token1.derivedETH)
+  let amount0USD = amount0ETH.times(bundle.ethPriceUSD)
+  let amount1USD = amount1ETH.times(bundle.ethPriceUSD)
 
   // get amount that should be tracked only - div 2 because cant count both input and output as volume
   let amountTotalUSDTracked = getTrackedAmountUSD(amount0Abs, token0 as Token, amount1Abs, token1 as Token).div(
     BigDecimal.fromString('2')
   )
-  let amountTotalRSS3Tracked = safeDiv(amountTotalUSDTracked, bundle.rss3PriceUSD)
+  let amountTotalETHTracked = safeDiv(amountTotalUSDTracked, bundle.ethPriceUSD)
   let amountTotalUSDUntracked = amount0USD.plus(amount1USD).div(BigDecimal.fromString('2'))
 
-  let feesRSS3 = amountTotalRSS3Tracked.times(pool.feeTier.toBigDecimal()).div(BigDecimal.fromString('1000000'))
+  let feesETH = amountTotalETHTracked.times(pool.feeTier.toBigDecimal()).div(BigDecimal.fromString('1000000'))
   let feesUSD = amountTotalUSDTracked.times(pool.feeTier.toBigDecimal()).div(BigDecimal.fromString('1000000'))
 
   // global updates
   factory.txCount = factory.txCount.plus(ONE_BI)
-  factory.totalVolumeRSS3 = factory.totalVolumeRSS3.plus(amountTotalRSS3Tracked)
+  factory.totalVolumeETH = factory.totalVolumeETH.plus(amountTotalETHTracked)
   factory.totalVolumeUSD = factory.totalVolumeUSD.plus(amountTotalUSDTracked)
   factory.untrackedVolumeUSD = factory.untrackedVolumeUSD.plus(amountTotalUSDUntracked)
-  factory.totalFeesRSS3 = factory.totalFeesRSS3.plus(feesRSS3)
+  factory.totalFeesETH = factory.totalFeesETH.plus(feesETH)
   factory.totalFeesUSD = factory.totalFeesUSD.plus(feesUSD)
 
   // reset aggregate tvl before individual pool tvl updates
-  let currentPoolTvlRSS3 = pool.totalValueLockedRSS3
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.minus(currentPoolTvlRSS3)
+  let currentPoolTvlETH = pool.totalValueLockedETH
+  factory.totalValueLockedETH = factory.totalValueLockedETH.minus(currentPoolTvlETH)
 
   // pool volume
   pool.volumeToken0 = pool.volumeToken0.plus(amount0Abs)
@@ -361,24 +361,24 @@ export function handleSwap(event: SwapEvent): void {
   pool.save()
 
   // update USD pricing
-  bundle.rss3PriceUSD = getRSS3PriceInUSD()
+  bundle.ethPriceUSD = getETHPriceInUSD()
   bundle.save()
-  token0.derivedRSS3 = findRSS3PerToken(token0 as Token)
-  token1.derivedRSS3 = findRSS3PerToken(token1 as Token)
+  token0.derivedETH = findETHPerToken(token0 as Token)
+  token1.derivedETH = findETHPerToken(token1 as Token)
 
   /**
    * Things afffected by new USD rates
    */
-  pool.totalValueLockedRSS3 = pool.totalValueLockedToken0
-    .times(token0.derivedRSS3)
-    .plus(pool.totalValueLockedToken1.times(token1.derivedRSS3))
-  pool.totalValueLockedUSD = pool.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  pool.totalValueLockedETH = pool.totalValueLockedToken0
+    .times(token0.derivedETH)
+    .plus(pool.totalValueLockedToken1.times(token1.derivedETH))
+  pool.totalValueLockedUSD = pool.totalValueLockedETH.times(bundle.ethPriceUSD)
 
-  factory.totalValueLockedRSS3 = factory.totalValueLockedRSS3.plus(pool.totalValueLockedRSS3)
-  factory.totalValueLockedUSD = factory.totalValueLockedRSS3.times(bundle.rss3PriceUSD)
+  factory.totalValueLockedETH = factory.totalValueLockedETH.plus(pool.totalValueLockedETH)
+  factory.totalValueLockedUSD = factory.totalValueLockedETH.times(bundle.ethPriceUSD)
 
-  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedRSS3).times(bundle.rss3PriceUSD)
-  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedRSS3).times(bundle.rss3PriceUSD)
+  token0.totalValueLockedUSD = token0.totalValueLocked.times(token0.derivedETH).times(bundle.ethPriceUSD)
+  token1.totalValueLockedUSD = token1.totalValueLocked.times(token1.derivedETH).times(bundle.ethPriceUSD)
 
   // create Swap event
   let transaction = loadTransaction(event)
@@ -415,7 +415,7 @@ export function handleSwap(event: SwapEvent): void {
   let token1HourData = updateTokenHourData(token1 as Token, event)
 
   // update volume metrics
-  uniswapDayData.volumeRSS3 = uniswapDayData.volumeRSS3.plus(amountTotalRSS3Tracked)
+  uniswapDayData.volumeETH = uniswapDayData.volumeETH.plus(amountTotalETHTracked)
   uniswapDayData.volumeUSD = uniswapDayData.volumeUSD.plus(amountTotalUSDTracked)
   uniswapDayData.feesUSD = uniswapDayData.feesUSD.plus(feesUSD)
 

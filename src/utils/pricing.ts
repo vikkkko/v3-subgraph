@@ -4,13 +4,13 @@ import { Bundle, Pool, Token } from './../types/schema'
 import { BigDecimal, BigInt } from '@graphprotocol/graph-ts'
 import { exponentToBigDecimal, safeDiv } from '../utils/index'
 
-const RSS3_ADDRESS = '0x4200000000000000000000000000000000000042'
-const USDT_RSS3_03_POOL = '0x193cabb82546b5f9e291d5b02fe29ec64c653573'
+const WETH_ADDRESS = '0x4200000000000000000000000000000000000042'
+const USDT_WETH_03_POOL = '0x193cabb82546b5f9e291d5b02fe29ec64c653573'
 
 // token where amounts should contribute to tracked volume and liquidity
 // usually tokens that many tokens are paired with s
 export let WHITELIST_TOKENS: string[] = [
-  RSS3_ADDRESS, // RSS3
+  WETH_ADDRESS, // RSS3
   '0x3a9dad5a0c8a968003d9d7b68b1b6f45d7a4cb4d', // USDT
   '0xb8062fcc4c85a564651eb45b66fd1ffcff9b86bf', // USDC
   '0x05bf18310a20fbaeba376282b5fc6cc0a404402b', // A
@@ -22,7 +22,7 @@ let STABLE_COINS: string[] = [
   '0xb8062fcc4c85a564651eb45b66fd1ffcff9b86bf'
 ]
 
-let MINIMUM_RSS3_LOCKED = BigDecimal.fromString('60')
+let MINIMUM_ETH_LOCKED = BigDecimal.fromString('60')
 
 let Q192 = 2 ** 192
 export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, token1: Token): BigDecimal[] {
@@ -37,9 +37,9 @@ export function sqrtPriceX96ToTokenPrices(sqrtPriceX96: BigInt, token0: Token, t
   return [price0, price1]
 }
 
-export function getRSS3PriceInUSD(): BigDecimal {
-  // fetch rss3 prices for each stablecoin
-  let usdcPool = Pool.load(USDT_RSS3_03_POOL) // dai is token0
+export function getETHPriceInUSD(): BigDecimal {
+  // fetch eth prices for each stablecoin
+  let usdcPool = Pool.load(USDT_WETH_03_POOL) // dai is token0
   if (usdcPool !== null) {
     return usdcPool.token0Price
   } else {
@@ -48,24 +48,24 @@ export function getRSS3PriceInUSD(): BigDecimal {
 }
 
 /**
- * Search through graph to find derived RSS3 per token.
- * @todo update to be derived RSS3 (add stablecoin estimates)
+ * Search through graph to find derived ETH per token.
+ * @todo update to be derived ETH (add stablecoin estimates)
  **/
-export function findRSS3PerToken(token: Token): BigDecimal {
-  if (token.id == RSS3_ADDRESS) {
+export function findETHPerToken(token: Token): BigDecimal {
+  if (token.id == WETH_ADDRESS) {
     return ONE_BD
   }
   let whiteList = token.whitelistPools
   // for now just take USD from pool with greatest TVL
   // need to update this to actually detect best rate based on liquidity distribution
-  let largestLiquidityRSS3 = ZERO_BD
+  let largestLiquidityETH = ZERO_BD
   let priceSoFar = ZERO_BD
   let bundle = Bundle.load('1')
 
   // hardcoded fix for incorrect rates
   // if whitelist includes token - get the safe price
   if (STABLE_COINS.includes(token.id)) {
-    priceSoFar = safeDiv(ONE_BD, bundle.rss3PriceUSD)
+    priceSoFar = safeDiv(ONE_BD, bundle.ethPriceUSD)
   } else {
     for (let i = 0; i < whiteList.length; ++i) {
       let poolAddress = whiteList[i]
@@ -75,22 +75,22 @@ export function findRSS3PerToken(token: Token): BigDecimal {
         if (pool.token0 == token.id) {
           // whitelist token is token1
           let token1 = Token.load(pool.token1)
-          // get the derived RSS3 in pool
-          let rss3Locked = pool.totalValueLockedToken1.times(token1.derivedRSS3)
-          if (rss3Locked.gt(largestLiquidityRSS3) && rss3Locked.gt(MINIMUM_RSS3_LOCKED)) {
-            largestLiquidityRSS3 = rss3Locked
-            // token1 per our token * RSS3th per token1
-            priceSoFar = pool.token1Price.times(token1.derivedRSS3 as BigDecimal)
+          // get the derived ETH in pool
+          let ethLocked = pool.totalValueLockedToken1.times(token1.derivedETH)
+          if (ethLocked.gt(largestLiquidityETH) && ethLocked.gt(MINIMUM_ETH_LOCKED)) {
+            largestLiquidityETH = ethLocked
+            // token1 per our token * ETH per token1
+            priceSoFar = pool.token1Price.times(token1.derivedETH as BigDecimal)
           }
         }
         if (pool.token1 == token.id) {
           let token0 = Token.load(pool.token0)
-          // get the derived RSS3 in pool
-          let rss3Locked = pool.totalValueLockedToken0.times(token0.derivedRSS3)
-          if (rss3Locked.gt(largestLiquidityRSS3) && rss3Locked.gt(MINIMUM_RSS3_LOCKED)) {
-            largestLiquidityRSS3 = rss3Locked
-            // token0 per our token * RSS3 per token0
-            priceSoFar = pool.token0Price.times(token0.derivedRSS3 as BigDecimal)
+          // get the derived ETH in pool
+          let ethLocked = pool.totalValueLockedToken0.times(token0.derivedETH)
+          if (ethLocked.gt(largestLiquidityETH) && ethLocked.gt(MINIMUM_ETH_LOCKED)) {
+            largestLiquidityETH = ethLocked
+            // token0 per our token * ETH per token0
+            priceSoFar = pool.token0Price.times(token0.derivedETH as BigDecimal)
           }
         }
       }
@@ -112,8 +112,8 @@ export function getTrackedAmountUSD(
   token1: Token
 ): BigDecimal {
   let bundle = Bundle.load('1')
-  let price0USD = token0.derivedRSS3.times(bundle.rss3PriceUSD)
-  let price1USD = token1.derivedRSS3.times(bundle.rss3PriceUSD)
+  let price0USD = token0.derivedETH.times(bundle.ethPriceUSD)
+  let price1USD = token1.derivedETH.times(bundle.ethPriceUSD)
 
   // both are whitelist tokens, return sum of both amounts
   if (WHITELIST_TOKENS.includes(token0.id) && WHITELIST_TOKENS.includes(token1.id)) {

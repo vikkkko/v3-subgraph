@@ -7,22 +7,22 @@ type Factory @entity {
   txCount: BigInt!
   # total volume all time in derived USD
   totalVolumeUSD: BigDecimal!
-  # total volume all time in derived RSS3
-  totalVolumeRSS3: BigDecimal!
+  # total volume all time in derived ETH
+  totalVolumeETH: BigDecimal!
   # total swap fees all time in USD
   totalFeesUSD: BigDecimal!
   # total swap fees all time in USD
-  totalFeesRSS3: BigDecimal!
+  totalFeesETH: BigDecimal!
   # all volume even through less reliable USD values
   untrackedVolumeUSD: BigDecimal!
   # TVL derived in USD
   totalValueLockedUSD: BigDecimal!
-  # TVL derived in RSS3
-  totalValueLockedRSS3: BigDecimal!
+  # TVL derived in ETH
+  totalValueLockedETH: BigDecimal!
   # TVL derived in USD untracked
   totalValueLockedUSDUntracked: BigDecimal!
-  # TVL derived in RSS3 untracked
-  totalValueLockedRSS3Untracked: BigDecimal!
+  # TVL derived in ETH untracked
+  totalValueLockedETHUntracked: BigDecimal!
 
   # current owner of the factory
   owner: ID!
@@ -31,8 +31,8 @@ type Factory @entity {
 # stores for USD calculations
 type Bundle @entity {
   id: ID!
-  # price of RSS3 in usd
-  rss3PriceUSD: BigDecimal!
+  # price of ETH in usd
+  ethPriceUSD: BigDecimal!
 }
 
 type Token @entity {
@@ -64,8 +64,8 @@ type Token @entity {
   totalValueLockedUSD: BigDecimal!
   # TVL derived in USD untracked
   totalValueLockedUSDUntracked: BigDecimal!
-  # derived price in RSS3
-  derivedRSS3: BigDecimal!
+  # derived price in ETH
+  derivedETH: BigDecimal!
   # pools token is in that are white listed for USD pricing
   whitelistPools: [Pool!]!
   # derived fields
@@ -123,8 +123,8 @@ type Pool @entity {
   totalValueLockedToken0: BigDecimal!
   # total token 1 across all ticks
   totalValueLockedToken1: BigDecimal!
-  # tvl derived RSS3
-  totalValueLockedRSS3: BigDecimal!
+  # tvl derived ETH
+  totalValueLockedETH: BigDecimal!
   # tvl USD
   totalValueLockedUSD: BigDecimal!
   # TVL derived in USD untracked
@@ -437,8 +437,8 @@ type UniswapDayData @entity {
   id: ID!
   # timestamp rounded to current day by dividing by 86400
   date: Int!
-  # total daily volume in Uniswap derived in terms of RSS3
-  volumeRSS3: BigDecimal!
+  # total daily volume in Uniswap derived in terms of ETH
+  volumeETH: BigDecimal!
   # total daily volume in Uniswap derived in terms of USD
   volumeUSD: BigDecimal!
   # total daily volume in Uniswap derived in terms of USD untracked
