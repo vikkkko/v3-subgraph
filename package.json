@@ -6,6 +6,8 @@
   "scripts": {
     "codegen": "graph codegen --output-dir src/types/",
     "build": "graph build",
+    "create-rss3":"graph create --node https://thegraph.testnet.rss3.io/deploy vikkkko/openswap-v3",
+    "deploy-rss3":"graph deploy vikkkko/openswap-v3 --debug --ipfs http://34.133.12.134:5001 --node https://thegraph.testnet.rss3.io/deploy",
     "create-local": "graph create ianlapham/openswap-v3 --node http://127.0.0.1:8020",
     "deploy-local": "graph deploy ianlapham/openswap-v3 --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "deploy": "graph deploy ianlapham/openswap-v3-subgraph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
