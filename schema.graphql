@@ -207,6 +207,9 @@ type Position @entity {
   tickUpper: Tick!
   # total position liquidity
   liquidity: BigInt!
+  blockNumber: BigInt!
+  totalVolumeUSD: BigDecimal!
+  points: BigDecimal!
   # amount of token 0 ever deposited to position
   depositedToken0: BigDecimal!
   # amount of token 1 ever deposited to position

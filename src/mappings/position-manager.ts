@@ -34,6 +34,9 @@ function getPosition(event: ethereum.Event, tokenId: BigInt): Position | null {
       position.tickLower = position.pool.concat('#').concat(positionResult.value5.toString())
       position.tickUpper = position.pool.concat('#').concat(positionResult.value6.toString())
       position.liquidity = ZERO_BI
+      position.blockNumber = ZERO_BI
+      position.totalVolumeUSD = ZERO_BD
+      position.points = ZERO_BD
       position.depositedToken0 = ZERO_BD
       position.depositedToken1 = ZERO_BD
       position.withdrawnToken0 = ZERO_BD
@@ -80,6 +83,7 @@ function savePositionSnapshot(position: Position, event: ethereum.Event): void {
 }
 
 export function handleIncreaseLiquidity(event: IncreaseLiquidity): void {
+  let bundle = Bundle.load('1')
   // temp fix
   if (event.block.number.equals(BigInt.fromI32(14317993))) {
     return
@@ -107,6 +111,16 @@ export function handleIncreaseLiquidity(event: IncreaseLiquidity): void {
   position.depositedToken0 = position.depositedToken0.plus(amount0)
   position.depositedToken1 = position.depositedToken1.plus(amount1)
 
+  let durationBlockNumber = ZERO_BI
+  if(position.blockNumber != ZERO_BI){
+    durationBlockNumber = event.block.number.minus(position.blockNumber)
+  }
+  position.points = position.points.plus(position.totalVolumeUSD.times(durationBlockNumber.toBigDecimal()))
+
+  let token0Value = (position.depositedToken0.minus(position.withdrawnToken0)).plus(token0.derivedETH.times(bundle.ethPriceUSD))
+  let token1Value = (position.depositedToken1.minus(position.withdrawnToken1)).plus(token1.derivedETH.times(bundle.ethPriceUSD))
+  position.totalVolumeUSD = token0Value.plus(token1Value)
+  position.blockNumber = event.block.number
   updateFeeVars(position!, event, event.params.tokenId)
 
   position.save()
@@ -115,6 +129,7 @@ export function handleIncreaseLiquidity(event: IncreaseLiquidity): void {
 }
 
 export function handleDecreaseLiquidity(event: DecreaseLiquidity): void {
+  let bundle = Bundle.load('1')
   // temp fix
   if (event.block.number == BigInt.fromI32(14317993)) {
     return
@@ -140,6 +155,17 @@ export function handleDecreaseLiquidity(event: DecreaseLiquidity): void {
   position.liquidity = position.liquidity.minus(event.params.liquidity)
   position.withdrawnToken0 = position.withdrawnToken0.plus(amount0)
   position.withdrawnToken1 = position.withdrawnToken1.plus(amount1)
+
+  let durationBlockNumber = ZERO_BI
+  if(position.blockNumber != ZERO_BI){
+    durationBlockNumber = event.block.number.minus(position.blockNumber)
+  }
+  position.points = position.points.plus(position.totalVolumeUSD.times(durationBlockNumber.toBigDecimal()))
+
+  let token0Value = (position.depositedToken0.minus(position.withdrawnToken0)).plus(token0.derivedETH.times(bundle.ethPriceUSD))
+  let token1Value = (position.depositedToken1.minus(position.withdrawnToken1)).plus(token1.derivedETH.times(bundle.ethPriceUSD))
+  position.totalVolumeUSD = token0Value.plus(token1Value)
+  position.blockNumber = event.block.number
 
   position = updateFeeVars(position!, event, event.params.tokenId)
   position.save()
