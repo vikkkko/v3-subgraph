@@ -145,6 +145,12 @@ export function handleMint(event: MintEvent): void {
   upperTick.liquidityGross = upperTick.liquidityGross.plus(amount)
   upperTick.liquidityNet = upperTick.liquidityNet.minus(amount)
 
+  token0.save()
+  token1.save()
+  pool.save()
+  factory.save()
+  mint.save()
+
   // TODO: Update Tick's volume, fees, and liquidity provider count. Computing these on the tick
   // level requires reimplementing some of the swapping code from v3-core.
 
@@ -155,12 +161,6 @@ export function handleMint(event: MintEvent): void {
   updateTokenDayData(token1 as Token, event)
   updateTokenHourData(token0 as Token, event)
   updateTokenHourData(token1 as Token, event)
-
-  token0.save()
-  token1.save()
-  pool.save()
-  factory.save()
-  mint.save()
 
   // Update inner tick vars and save the ticks
   updateTickFeeVarsAndSave(lowerTick!, event)
@@ -239,6 +239,20 @@ export function handleBurn(event: BurnEvent): void {
   burn.tickUpper = BigInt.fromI32(event.params.tickUpper)
   burn.logIndex = event.logIndex
 
+  token0.save()
+  token1.save()
+  pool.save()
+  factory.save()
+  burn.save()
+
+  updateUniswapDayData(event)
+  updatePoolDayData(event)
+  updatePoolHourData(event)
+  updateTokenDayData(token0 as Token, event)
+  updateTokenDayData(token1 as Token, event)
+  updateTokenHourData(token0 as Token, event)
+  updateTokenHourData(token1 as Token, event)
+
   // tick entities
   let lowerTickId = poolAddress + '#' + BigInt.fromI32(event.params.tickLower).toString()
   let upperTickId = poolAddress + '#' + BigInt.fromI32(event.params.tickUpper).toString()
@@ -250,21 +264,8 @@ export function handleBurn(event: BurnEvent): void {
   upperTick.liquidityGross = upperTick.liquidityGross.minus(amount)
   upperTick.liquidityNet = upperTick.liquidityNet.plus(amount)
 
-  updateUniswapDayData(event)
-  updatePoolDayData(event)
-  updatePoolHourData(event)
-  updateTokenDayData(token0 as Token, event)
-  updateTokenDayData(token1 as Token, event)
-  updateTokenHourData(token0 as Token, event)
-  updateTokenHourData(token1 as Token, event)
   updateTickFeeVarsAndSave(lowerTick!, event)
   updateTickFeeVarsAndSave(upperTick!, event)
-
-  token0.save()
-  token1.save()
-  pool.save()
-  factory.save()
-  burn.save()
 }
 
 export function handleSwap(event: SwapEvent): void {
@@ -405,6 +406,12 @@ export function handleSwap(event: SwapEvent): void {
   pool.feeGrowthGlobal0X128 = feeGrowthGlobal0X128 as BigInt
   pool.feeGrowthGlobal1X128 = feeGrowthGlobal1X128 as BigInt
 
+  factory.save()
+  pool.save()
+  token0.save()
+  token1.save()
+  swap.save()
+
   // interval data
   let uniswapDayData = updateUniswapDayData(event)
   let poolDayData = updatePoolDayData(event)
@@ -449,7 +456,6 @@ export function handleSwap(event: SwapEvent): void {
   token1HourData.untrackedVolumeUSD = token1HourData.untrackedVolumeUSD.plus(amountTotalUSDTracked)
   token1HourData.feesUSD = token1HourData.feesUSD.plus(feesUSD)
 
-  swap.save()
   token0DayData.save()
   token1DayData.save()
   uniswapDayData.save()
@@ -457,10 +463,6 @@ export function handleSwap(event: SwapEvent): void {
   token0HourData.save()
   token1HourData.save()
   poolHourData.save()
-  factory.save()
-  pool.save()
-  token0.save()
-  token1.save()
 
   // Update inner vars of current or crossed ticks
   let newTick = pool.tick!
